@@ -1,10 +1,8 @@
 import User from '../models/user.model.js';
-import bcrypt from 'bcrypt';
 import asyncHandler from '../utils/asyncHandler.js';
 import ApiError from '../utils/ApiError.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import {
-    BCRYPT_SALT_ROUNDS,
     HTTP_STATUS,
     MESSAGES,
     REDIRECT_MESSAGES,
@@ -22,9 +20,7 @@ export const userSignUp = asyncHandler(async (req, res, next) => {
     const { fullName, username, email, password } = req.body;
 
     try {
-        const hashedPassword = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
-
-        const user = await User.create({ fullName, username, email, password: hashedPassword });
+        const user = await User.create({ fullName, username, email, password });
 
         const wantsJson = isApiRequest(req);
 
@@ -90,7 +86,7 @@ export const userLogin = asyncHandler(async (req, res, next) => {
         });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await user.comparePassword(password);
     if (!isMatch) {
         const wantsJson = isApiRequest(req);
 
