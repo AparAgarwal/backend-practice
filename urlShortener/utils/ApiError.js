@@ -2,7 +2,7 @@
  * Custom API Error Class
  * Extends native Error class to create standardized error objects
  * with additional properties for better error handling
- * 
+ *
  * @class ApiError
  * @extends Error
  */
@@ -13,12 +13,7 @@ class ApiError extends Error {
      * @param {Array} errors - Additional error details (default: [])
      * @param {string} stack - Error stack trace (optional)
      */
-    constructor(
-        statusCode,
-        message = "Something went wrong",
-        errors = [],
-        stack = ""
-    ) {
+    constructor(statusCode, message = 'Something went wrong', errors = [], stack = '') {
         super(message);
         this.statusCode = statusCode;
         this.data = null;

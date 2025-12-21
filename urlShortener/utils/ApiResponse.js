@@ -1,7 +1,7 @@
 /**
  * Standardized API Response Class
  * Creates consistent response structure for all successful API responses
- * 
+ *
  * @class ApiResponse
  */
 class ApiResponse {
@@ -10,7 +10,7 @@ class ApiResponse {
      * @param {*} data - Response data to send to client
      * @param {string} message - Success message (default: "Success")
      */
-    constructor(statusCode, data, message = "Success") {
+    constructor(statusCode, data, message = 'Success') {
         this.statusCode = statusCode;
         this.data = data;
         this.message = message;

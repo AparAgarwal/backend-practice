@@ -2,7 +2,7 @@
  * Global Error Handling Middleware
  * Catches all errors from async handlers and other middleware
  * Returns standardized error response to client
- * 
+ *
  * @param {Error} err - Error object (could be ApiError or native Error)
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
@@ -10,12 +10,12 @@
  */
 const errorHandler = (err, req, res, next) => {
     const statusCode = err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    const message = err.message || 'Internal Server Error';
     const errors = err.errors || [];
 
     // Log error for debugging (in production, use proper logging service)
-    if (process.env.NODE_ENV !== "production") {
-        console.error("Error:", err);
+    if (process.env.NODE_ENV !== 'production') {
+        console.error('Error:', err);
     }
 
     // For EJS views, render error page or redirect with error message
@@ -33,7 +33,7 @@ const errorHandler = (err, req, res, next) => {
         success: false,
         message,
         errors,
-        ...(process.env.NODE_ENV !== "production" && { stack: err.stack })
+        ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
     });
 };
 
