@@ -39,6 +39,7 @@ export const HTTP_STATUS = {
 export const MESSAGES = {
     USER_CREATED: 'User created successfully!',
     LOGIN_SUCCESS: 'Login successful!',
+    LOGOUT_SUCCESS: 'Logout successful!',
     URL_CREATED: 'Short URL created successfully',
     URL_DELETED: 'URL deleted successfully',
     URLS_FETCHED: 'URLs fetched successfully',
@@ -49,6 +50,7 @@ export const MESSAGES = {
     INVALID_CREDENTIALS: 'Invalid username or password',
     ALL_FIELDS_REQUIRED: 'All fields are required',
     DUPLICATE_EXISTS: 'already exists. Please choose another or log in.',
+    UNAUTHORIZED: 'Unauthorized Request',
     SOMETHING_WENT_WRONG: 'Something went wrong. Please try again.'
 };
 
