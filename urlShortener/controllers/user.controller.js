@@ -22,7 +22,10 @@ const generateAccessAndRefreshToken = async userId => {
 
         return { accessToken, refreshToken };
     } catch (error) {
-        throw new ApiError(HTTP_STATUS.INTERNAL_SERVER_ERROR, error.message || MESSAGES.SOMETHING_WENT_WRONG);
+        throw new ApiError(
+            HTTP_STATUS.INTERNAL_SERVER_ERROR,
+            error.message || MESSAGES.SOMETHING_WENT_WRONG
+        );
     }
 };
 
@@ -116,6 +119,12 @@ export const userLogin = asyncHandler(async (req, res, next) => {
         sameSite: 'strict'
     };
 
+    res.cookie('accessToken', accessToken, cookieOptions).cookie(
+        'refreshToken',
+        refreshToken,
+        cookieOptions
+    );
+
     if (wantsJson) {
         // Don't send password in response
         const userResponse = {
@@ -126,8 +135,6 @@ export const userLogin = asyncHandler(async (req, res, next) => {
         };
         return res
             .status(HTTP_STATUS.OK)
-            .cookie('accessToken', accessToken, cookieOptions)
-            .cookie('refreshToken', refreshToken, cookieOptions)
             .json(new ApiResponse(HTTP_STATUS.OK, userResponse, MESSAGES.LOGIN_SUCCESS));
     }
 
@@ -139,50 +146,68 @@ export const userLogin = asyncHandler(async (req, res, next) => {
     });
 });
 
-export const userLogout = asyncHandler(async (req, res, next) => {
-    await User.findByIdAndUpdate(req.user._id, {
-        $set: {
-            refreshToken: undefined
-        }
-    },
-        {
-            new: true
-        }
-    )
+export const userLogout = asyncHandler(async (req, res) => {
+    await User.findByIdAndUpdate(req.user._id, { $unset: { refreshToken: 1 } }, { new: true });
 
     const cookieOptions = {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict'
+    };
+
+    const wantsJson = isApiRequest(req);
+
+    res.clearCookie('accessToken', cookieOptions).clearCookie('refreshToken', cookieOptions);
+
+    if (wantsJson) {
+        return res
+            .status(HTTP_STATUS.OK)
+            .json(new ApiResponse(HTTP_STATUS.OK, {}, MESSAGES.LOGOUT_SUCCESS));
     }
-    return res
-    .status(HTTP_STATUS.OK)
-    .clearCookie("accessToken", cookieOptions)
-    .clearCookie("refreshToken", cookieOptions)
-    .json(new ApiResponse(HTTP_STATUS.OK, {}, MESSAGES.LOGOUT_SUCCESS))
-})
 
-export const refreshAccessToken = asyncHandler(async (req, res, next) => {
+    // Render view for browser
+    return res.render('logout', {
+        success: REDIRECT_MESSAGES.LOGOUT_SUCCESS,
+        redirectTo: '/login',
+        delay: 3000
+    });
+});
 
+export const refreshAccessToken = asyncHandler(async (req, res) => {
     const incomingRefreshToken = req.cookies?.refreshToken;
+    const wantsJson = isApiRequest(req);
 
-    if(!incomingRefreshToken){
-        throw new ApiError(HTTP_STATUS.UNAUTHORIZED, MESSAGES.UNAUTHORIZED);
-    }
-
-    const user = await User.findById(req.user._id).select("+refreshToken");
-
-    if(incomingRefreshToken !== user.refreshToken){
-        throw new ApiError(HTTP_STATUS.UNAUTHORIZED, MESSAGES.UNAUTHORIZED);
-    }
-
-    try{
-        const {accessToken, refreshToken} = await generateAccessAndRefreshToken(user._id);
-        const cookieOptions = {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict'
+    if (!incomingRefreshToken) {
+        if (wantsJson) {
+            throw new ApiError(HTTP_STATUS.UNAUTHORIZED, MESSAGES.UNAUTHORIZED);
         }
+        return res.redirect('/login');
+    }
+
+    const user = await User.findById(req.user?._id).select('+refreshToken');
+
+    if (!user || incomingRefreshToken !== user.refreshToken) {
+        if (wantsJson) {
+            throw new ApiError(HTTP_STATUS.UNAUTHORIZED, MESSAGES.UNAUTHORIZED);
+        }
+        return res.redirect('/login');
+    }
+
+    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
+
+    const cookieOptions = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict'
+    };
+
+    res.cookie('accessToken', accessToken, cookieOptions).cookie(
+        'refreshToken',
+        refreshToken,
+        cookieOptions
+    );
+
+    if (wantsJson) {
         const userResponse = {
             _id: user._id,
             fullName: user.fullName,
@@ -191,11 +216,9 @@ export const refreshAccessToken = asyncHandler(async (req, res, next) => {
         };
         return res
             .status(HTTP_STATUS.OK)
-            .cookie('accessToken', accessToken, cookieOptions)
-            .cookie('refreshToken', refreshToken, cookieOptions)
-            .json(new ApiResponse(HTTP_STATUS.OK, userResponse, MESSAGES.LOGIN_SUCCESS));
+            .json(new ApiResponse(HTTP_STATUS.OK, userResponse, MESSAGES.TOKEN_REFRESHED));
+    }
 
-    }catch(error){
-        throw new ApiError(HTTP_STATUS.UNAUTHORIZED, MESSAGES.UNAUTHORIZED, error);
-    }  
-})
+    // Web refresh is silent — redirect back
+    return res.redirect('/');
+});

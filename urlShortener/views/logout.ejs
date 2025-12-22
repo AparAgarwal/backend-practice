@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logged Out - URL Shortener</title>
+    <link rel="stylesheet" href="/auth.css">
+</head>
+
+<body>
+    <div class="auth-container">
+        <div class="auth-header">
+            <h1>Signed Out</h1>
+            <p class="subtitle">You have been logged out successfully.</p>
+            <p class="subtitle">Redirecting to login page...</p>
+        </div>
+
+        <% if (locals.message || locals.success) { %>
+            <div class="success-message">
+                <%= locals.message || success %>
+            </div>
+        <% } %>
+
+        <div class="auth-footer">
+            <p>If you are not redirected automatically, <a href="/login">click here</a>.</p>
+            <div class="home-link">
+                <a href="/">← Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <% if (locals.redirectTo) { %>
+        <script>
+            setTimeout(() => {
+                window.location.href = "<%= redirectTo %>";
+            }, "<%= locals.delay || 1500 %>");
+        </script>
+    <% } %>
+
+</body>
+</html>

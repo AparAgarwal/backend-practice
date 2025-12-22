@@ -1,6 +1,12 @@
 import express from 'express';
+import { verifyAccessToken, verifyRefreshToken } from '../middlewares/auth.middleware.js';
 import { getAllUrls, redirectToUrl, createShortUrl } from '../controllers/url.controller.js';
-import { userSignUp, userLogin } from '../controllers/user.controller.js';
+import {
+    userSignUp,
+    userLogin,
+    userLogout,
+    refreshAccessToken
+} from '../controllers/user.controller.js';
 import {
     shortIdValidation,
     createUrlValidation,
@@ -43,6 +49,12 @@ router.post('/user/register', signupValidation, userSignUp);
 
 // POST /user/login - User login via web form
 router.post('/user/login', loginValidation, userLogin);
+
+// Logout (web)
+router.get('/logout', verifyAccessToken, userLogout);
+
+// Refresh token (web, silent)
+router.get('/refresh', verifyRefreshToken, refreshAccessToken);
 
 // ===== URL Redirect (must be last) =====
 // GET /:shortId - Redirect to original URL (must be last to avoid conflicts)
