@@ -19,7 +19,7 @@ const errorHandler = (err, req, res, next) => {
     }
 
     // For EJS views, render error page or redirect with error message
-    if (req.accepts('html') && !req.xhr) {
+    if (req.accepts('html') && !req.xhr && !req.originalUrl.startsWith('/api')) {
         // If it's a page request (not AJAX/API), render with error
         const previousView = req.originalUrl.split('/')[1] || 'home';
         return res.status(statusCode).render(previousView, {

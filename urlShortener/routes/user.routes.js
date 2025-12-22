@@ -1,6 +1,7 @@
 import express from 'express';
-import { userSignUp, userLogin } from '../controllers/user.controller.js';
+import { userSignUp, userLogin, userLogout, refreshAccessToken } from '../controllers/user.controller.js';
 import { signupValidation, loginValidation } from '../middlewares/validators.js';
+import { verifyAccessToken, verifyRefreshToken } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
@@ -15,4 +16,7 @@ router.post('/register', signupValidation, userSignUp);
 // POST /api/v1/user/login - User login (JSON or HTML response based on request)
 router.post('/login', loginValidation, userLogin);
 
+// POST /api/v1/user/logout - User Logout
+router.post('/logout', verifyAccessToken, userLogout)
+router.post('/refresh-token', verifyRefreshToken, refreshAccessToken)
 export default router;
