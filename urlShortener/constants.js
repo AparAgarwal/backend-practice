@@ -40,6 +40,7 @@ export const MESSAGES = {
     USER_CREATED: 'User created successfully!',
     LOGIN_SUCCESS: 'Login successful!',
     LOGOUT_SUCCESS: 'Logout successful!',
+    TOKEN_REFRESHED: 'Token refreshed successfully',
     URL_CREATED: 'Short URL created successfully',
     URL_DELETED: 'URL deleted successfully',
     URLS_FETCHED: 'URLs fetched successfully',
