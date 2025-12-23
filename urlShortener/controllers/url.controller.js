@@ -4,11 +4,7 @@ import asyncHandler from '../utils/asyncHandler.js';
 import ApiError from '../utils/ApiError.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import { SHORT_ID_LENGTH, HTTP_STATUS, MESSAGES } from '../constants.js';
-
-const isApiRequest = req =>
-    req.xhr ||
-    req.headers.accept?.includes('application/json') ||
-    req.originalUrl.startsWith('/api/');
+import { isApiRequest } from '../utils/helpers.js';
 
 export const createShortUrl = asyncHandler(async (req, res, next) => {
     // URL is already validated and sanitized by middleware

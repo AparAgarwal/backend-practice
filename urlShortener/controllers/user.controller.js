@@ -3,12 +3,7 @@ import asyncHandler from '../utils/asyncHandler.js';
 import ApiError from '../utils/ApiError.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import { HTTP_STATUS, MESSAGES, REDIRECT_MESSAGES, REDIRECT_DELAY_MS } from '../constants.js';
-
-const capitalize = (str = '') => (str ? str.charAt(0).toUpperCase() + str.slice(1) : '');
-const isApiRequest = req =>
-    req.xhr ||
-    req.headers.accept?.includes('application/json') ||
-    req.originalUrl.startsWith('/api/');
+import { capitalize, isApiRequest, getCookieOptions } from '../utils/helpers.js';
 
 const generateAccessAndRefreshToken = async userId => {
     try {
@@ -113,11 +108,7 @@ export const userLogin = asyncHandler(async (req, res, next) => {
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
 
-    const cookieOptions = {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict'
-    };
+    const cookieOptions = getCookieOptions();
 
     res.cookie('accessToken', accessToken, cookieOptions).cookie(
         'refreshToken',
@@ -149,11 +140,7 @@ export const userLogin = asyncHandler(async (req, res, next) => {
 export const userLogout = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(req.user._id, { $unset: { refreshToken: 1 } }, { new: true });
 
-    const cookieOptions = {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict'
-    };
+    const cookieOptions = getCookieOptions();
 
     const wantsJson = isApiRequest(req);
 
@@ -195,11 +182,7 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
 
-    const cookieOptions = {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict'
-    };
+    const cookieOptions = getCookieOptions();
 
     res.cookie('accessToken', accessToken, cookieOptions).cookie(
         'refreshToken',
