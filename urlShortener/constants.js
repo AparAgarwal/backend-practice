@@ -24,6 +24,10 @@ export const MAX_EMAIL_LENGTH = 255;
 // UI
 export const REDIRECT_DELAY_MS = 1500;
 
+// Tokens Expiry
+export const COOKIE_ACCESS_TOKEN_EXPIRY = 15 * 60 * 1000;
+export const COOKIE_REFRESH_TOKEN_EXPIRY = 7 * 24 * 60 * 60 * 1000;
+
 // HTTP Status Codes (for clarity)
 export const HTTP_STATUS = {
     OK: 200,
@@ -40,7 +44,6 @@ export const MESSAGES = {
     USER_CREATED: 'User created successfully!',
     LOGIN_SUCCESS: 'Login successful!',
     LOGOUT_SUCCESS: 'Logout successful!',
-    TOKEN_REFRESHED: 'Token refreshed successfully',
     URL_CREATED: 'Short URL created successfully',
     URL_DELETED: 'URL deleted successfully',
     URLS_FETCHED: 'URLs fetched successfully',
@@ -52,11 +55,19 @@ export const MESSAGES = {
     ALL_FIELDS_REQUIRED: 'All fields are required',
     DUPLICATE_EXISTS: 'already exists. Please choose another or log in.',
     UNAUTHORIZED: 'Unauthorized Request',
-    SOMETHING_WENT_WRONG: 'Something went wrong. Please try again.'
+    SOMETHING_WENT_WRONG: 'Something went wrong. Please try again.',
+
+    // Token related messages
+    TOKEN_REFRESHED: 'Token refreshed successfully',
+    TOKEN_EXPIRED: 'Token expired. Please login again.',
+    SESSION_EXPIRED: 'Session expired. Please login again.',
+    INVALID_TOKEN: 'Invalid token. Please login again.',
+    INVALID_REFRESH_TOKEN: 'Invalid refresh token. Please login again.'
 };
 
 // Redirect Messages (for web UI)
 export const REDIRECT_MESSAGES = {
     USER_CREATED: 'User created successfully! Redirecting...',
-    LOGIN_SUCCESS: 'LogIn Successful! Redirecting...'
+    LOGIN_SUCCESS: 'LogIn Successful! Redirecting...',
+    LOGOUT_SUCCESS: 'Successfully Logged Out. Redirecting...'
 };
