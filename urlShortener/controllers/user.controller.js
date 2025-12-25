@@ -21,10 +21,13 @@ export const userSignUp = asyncHandler(async (req, res, next) => {
 
         const wantsJson = isApiRequest(req);
 
+        // Generate tokens
         const accessToken = user.generateAccessToken();
         const refreshToken = user.generateRefreshToken();
-        user.refreshToken = refreshToken;
+        user.refreshTokenHash = await user.hashRefreshToken(refreshToken);
         user.refreshTokenCreatedAt = new Date();
+        user.tokenVersion = 0;
+
         await user.save({ validateBeforeSave: false });
 
         res.cookie('accessToken', accessToken, {
@@ -84,7 +87,7 @@ export const userLogin = asyncHandler(async (req, res, next) => {
         : { username: identifier };
 
     // Need to select password explicitly since it's excluded by default
-    const user = await User.findOne(identifierQuery).select('+password');
+    const user = await User.findOne(identifierQuery).select('+password +tokenVersion');
     const isMatch = await user?.comparePassword(password);
 
     const wantsJson = isApiRequest(req);
@@ -100,9 +103,12 @@ export const userLogin = asyncHandler(async (req, res, next) => {
     }
 
     try {
+        user.tokenVersion += 1;
+        await user.save({ validateBeforeSave: false });
+
         const accessToken = user.generateAccessToken();
         const refreshToken = user.generateRefreshToken();
-        user.refreshToken = refreshToken;
+        user.refreshTokenHash = await user.hashRefreshToken(refreshToken);
         user.refreshTokenCreatedAt = new Date();
         await user.save({ validateBeforeSave: false });
 
@@ -147,7 +153,10 @@ export const userLogin = asyncHandler(async (req, res, next) => {
 export const userLogout = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(
         req.user._id,
-        { $unset: { refreshToken: 1, refreshTokenCreatedAt: 1 } },
+        {
+            $unset: { refreshTokenHash: 1, refreshTokenCreatedAt: 1 },
+            $inc: { tokenVersion: 1 }
+        },
         { new: true }
     );
 

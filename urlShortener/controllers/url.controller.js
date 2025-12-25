@@ -23,7 +23,7 @@ export const createShortUrl = asyncHandler(async (req, res, next) => {
             );
     }
 
-    return res.render('home', { id: shortId });
+    return res.redirect(`/?shortId=${shortId}`);
 });
 
 export const redirectToUrl = asyncHandler(async (req, res, next) => {

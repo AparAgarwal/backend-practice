@@ -25,8 +25,9 @@ export const MAX_EMAIL_LENGTH = 255;
 export const REDIRECT_DELAY_MS = 1500;
 
 // Tokens Expiry
-export const COOKIE_ACCESS_TOKEN_EXPIRY = 15 * 60 * 1000;
-export const COOKIE_REFRESH_TOKEN_EXPIRY = 7 * 24 * 60 * 60 * 1000;
+export const COOKIE_ACCESS_TOKEN_EXPIRY = 15 * 60 * 1000; // 15 minutes
+export const COOKIE_REFRESH_TOKEN_EXPIRY = 7 * 24 * 60 * 60 * 1000; // 7 days
+export const REFRESH_TOKEN_ABSOLUTE_EXPIRY = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 // HTTP Status Codes (for clarity)
 export const HTTP_STATUS = {
@@ -62,7 +63,8 @@ export const MESSAGES = {
     TOKEN_EXPIRED: 'Token expired. Please login again.',
     SESSION_EXPIRED: 'Session expired. Please login again.',
     INVALID_TOKEN: 'Invalid token. Please login again.',
-    INVALID_REFRESH_TOKEN: 'Invalid refresh token. Please login again.'
+    INVALID_REFRESH_TOKEN: 'Invalid refresh token. Please login again.',
+    TOKEN_REUSE_DETECTED: 'Security alert: Token reuse detected. Please login again.'
 };
 
 // Redirect Messages (for web UI)

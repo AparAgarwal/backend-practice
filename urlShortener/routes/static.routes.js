@@ -28,7 +28,8 @@ const router = express.Router();
 // ===== View Pages =====
 // GET / - Home page
 router.get('/', restrictToLogin, (req, res) => {
-    return res.render('home');
+    const shortId = req.query.shortId;
+    return res.render('home', { id: shortId || null });
 });
 
 // GET /signup - Signup page
@@ -46,7 +47,7 @@ router.get('/manage-urls', getAllUrls);
 
 // ===== Web Form Submissions =====
 // POST /url - Create short URL via web form
-router.post('/url', createUrlValidation, createShortUrl);
+router.post('/url', restrictToLogin, createUrlValidation, createShortUrl);
 
 // POST /user/register - User registration via web form
 router.post('/user/register', signupValidation, userSignUp);
