@@ -28,7 +28,8 @@ const router = express.Router();
 // ===== View Pages =====
 // GET / - Home page
 router.get('/', restrictToLogin, (req, res) => {
-    const shortId = req.query.shortId;
+    const shortId = req.query.shortId || null;
+    const user = req.user || null;
 
     // Get flash messages from cookies
     const error = req.cookies.flash_error || null;
@@ -39,9 +40,10 @@ router.get('/', restrictToLogin, (req, res) => {
     if (redirectUrl) res.clearCookie('flash_redirectUrl');
 
     return res.render('home', {
-        id: shortId || null,
+        id: shortId,
         error,
-        redirectUrl
+        redirectUrl,
+        user
     });
 });
 
@@ -57,6 +59,13 @@ router.get('/login', (req, res) => {
 
 // GET /manage-urls - View all URLs page
 router.get('/manage-urls', restrictToLogin, getAllUrls);
+
+// GET /profile - User profile page
+router.get('/profile', restrictToLogin, (req, res) => {
+    return res.render('profile', {
+        user: req.user
+    });
+});
 
 // ===== Web Form Submissions =====
 // POST /url - Create short URL via web form
