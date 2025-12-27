@@ -7,6 +7,10 @@
     <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
+    <a class="profile" href="/profile">
+        <div class="avatar"><img src="<%= locals.user.avatarUrl %>" alt=""></div>
+        <span class="name"><%= locals.user.username %>!</span>
+    </a>
     <div class="container">
         <h1>🔗 URL Shortener</h1>
         <p class="subtitle">Get your URL shortened in a click</p>
