@@ -1,3 +1,5 @@
+import { getCookieOptions } from '../utils/helpers.js';
+
 /**
  * Global Error Handling Middleware
  * Catches all errors from async handlers and other middleware
@@ -20,9 +22,31 @@ const errorHandler = (err, req, res, next) => {
 
     // For EJS views, render error page or redirect with error message
     if (req.accepts('html') && !req.xhr && !req.originalUrl.startsWith('/api')) {
-        // If it's a page request (not AJAX/API), render with error
-        const previousView = req.originalUrl.split('/')[1] || 'home';
-        return res.status(statusCode).render(previousView, {
+        const routeName = req.originalUrl.split('/')[1]?.split('?')[0] || 'home';
+
+        // If it's a form submission route, use cookies to pass error without showing in URL
+        if (routeName === 'url') {
+            // Store error and form data in cookies temporarily (auto-expire in 5 seconds)
+            res.cookie('flash_error', message, { maxAge: 5000, ...getCookieOptions() });
+            if (req.body.redirectUrl) {
+                res.cookie('flash_redirectUrl', req.body.redirectUrl, {
+                    maxAge: 5000,
+                    ...getCookieOptions()
+                });
+            }
+            return res.redirect('/');
+        }
+
+        // For other routes, render the view directly
+        const viewMap = {
+            login: 'login',
+            signup: 'signup',
+            'manage-urls': 'manage-urls'
+        };
+
+        const viewName = viewMap[routeName] || 'home';
+
+        return res.status(statusCode).render(viewName, {
             error: message,
             ...req.body // Preserve form data
         });
