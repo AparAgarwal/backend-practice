@@ -4,26 +4,32 @@ A modern, secure URL shortening service built with Node.js, Express, and MongoDB
 
 ## 📋 Table of Contents
 
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Running the Application](#running-the-application)
-- [API Endpoints](#api-endpoints)
-- [Security Features](#security-features)
-- [Development](#development)
-- [Author](#author)
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [Project Structure](#-project-structure)
+- [Prerequisites](#-prerequisites)
+- [Installation](#-installation)
+- [Configuration](#-configuration)
+- [Running the Application](#-running-the-application)
+- [API Endpoints](#-api-endpoints)
+- [Security Features](#-security-features)
+- [Development](#-development)
+- [Testing the Application](#-testing-the-application)
+- [Recommended Development Tools](#recommended-development-tools)
+- [Project Notes](#-project-notes)
+- [Contributing](#-contributing)
+- [Author](#-author)
 
 ## ✨ Features
 
 - **URL Shortening**: Convert long URLs into short, manageable links with automatic protocol detection
 - **Click Analytics**: Track click counts and last clicked timestamps for each URL
-- **User Authentication**: Secure signup and login with bcrypt password hashing
+- **User Authentication**: Secure signup and login with JWT-based authentication and bcrypt password hashing
+- **Profile Management**: User profile page with avatar upload and management capabilities
 - **URL Management**: View, copy, and delete shortened URLs through an intuitive dashboard
+- **File Upload**: Image upload support with Cloudinary integration for avatar management
 - **Input Validation**: Comprehensive validation and sanitization using express-validator
-- **Security**: NoSQL injection prevention, XSS protection, and password security
+- **Security**: JWT authentication, NoSQL injection prevention, XSS protection, and password security
 - **Responsive UI**: Clean, modern web interface built with EJS templates
 - **Error Handling**: Centralized error handling with detailed logging
 - **RESTful API**: Well-structured API with content negotiation (JSON/HTML)
@@ -36,12 +42,14 @@ A modern, secure URL shortening service built with Node.js, Express, and MongoDB
 - **Framework**: Express.js v5
 - **Database**: MongoDB with Mongoose ODM
 - **Template Engine**: EJS
-- **Authentication**: bcrypt (salt rounds: 12)
+- **Authentication**: JWT (jsonwebtoken) + bcrypt (salt rounds: 12)
 - **Validation**: express-validator
+- **File Upload**: Multer + Cloudinary
 - **ID Generation**: nanoid (8-character IDs)
 - **Environment**: dotenv
-- **Middleware**: cookie-parser, express.json, express.urlencoded
+- **Middleware**: cookie-parser, express.json, express.urlencoded, multer, JWT auth
 - **Code Quality**: ESLint 9 + Prettier
+- **Static Assets**: serve-favicon
 
 ## 📁 Project Structure
 
@@ -58,9 +66,11 @@ urlShortener/
 │   └── db.js                # Database connection with retry logic
 ├── controllers/
 │   ├── url.controller.js    # URL business logic (create, redirect, delete, analytics)
-│   └── user.controller.js   # User business logic (signup, login)
+│   └── user.controller.js   # User business logic (signup, login, profile)
 ├── middlewares/
+│   ├── auth.middleware.js   # JWT authentication middleware
 │   ├── errorHandler.js      # Global error handling middleware
+│   ├── multer.middleware.js # File upload middleware configuration
 │   └── validators.js        # Input validation and sanitization rules
 ├── models/
 │   ├── url.model.js         # URL schema with click analytics
@@ -73,16 +83,25 @@ urlShortener/
 │   ├── ApiError.js          # Custom error class
 │   ├── ApiResponse.js       # Standardized API response
 │   ├── asyncHandler.js      # Async error wrapper
+│   ├── cloudinary.js        # Cloudinary configuration and upload utilities
+│   ├── generateAvatars.js   # Avatar generation utilities
+│   ├── helpers.js           # General helper functions
 │   └── validateEnv.js       # Environment variable validation
+├── service/                  # Business logic services (empty for now)
 ├── views/                    # EJS templates
 │   ├── home.ejs             # Homepage with URL creation form
 │   ├── login.ejs            # Login page
+│   ├── logout.ejs           # Logout confirmation page
 │   ├── signup.ejs           # Signup page
+│   ├── profile.ejs          # User profile page with avatar
 │   └── manage-urls.ejs      # URL management dashboard
 └── public/                   # Static assets
     ├── auth.css             # Authentication page styles
     ├── manage.css           # Dashboard styles
-    └── styles.css           # Homepage styles
+    ├── profile.css          # Profile page styles
+    ├── styles.css           # Homepage styles
+    ├── favicon.ico          # Site favicon
+    └── temp/                # Temporary file storage for uploads
 ```
 
 ## 📦 Prerequisites
@@ -136,6 +155,11 @@ Before you begin, ensure you have the following installed:
         - For MongoDB Atlas: `mongodb+srv://<username>:<password>@cluster.mongodb.net/shorturl`
     - `NODE_ENV`: Environment mode (`development` or `production`)
     - `BASE_URL`: Base URL for generating short links
+    - `JWT_SECRET`: Secret key for JWT token generation and verification
+    - `JWT_EXPIRY`: JWT token expiration time (e.g., "7d", "24h")
+    - `CLOUDINARY_CLOUD_NAME`: Cloudinary cloud name for image uploads
+    - `CLOUDINARY_API_KEY`: Cloudinary API key
+    - `CLOUDINARY_API_SECRET`: Cloudinary API secret
 
 3. **Start MongoDB** (if using local installation):
 
@@ -200,7 +224,9 @@ Server running at http://localhost:3000
 - `GET /` - Home page with URL creation form
 - `GET /signup` - User signup page
 - `GET /login` - User login page
-- `GET /manage-urls` - URL management dashboard
+- `GET /logout` - Logout confirmation page
+- `GET /profile` - User profile page (requires authentication)
+- `GET /manage-urls` - URL management dashboard (requires authentication)
 - `GET /:shortId` - Redirect to original URL (with click tracking)
 
 #### Web Form Submissions
@@ -351,13 +377,17 @@ All errors follow this format:
 - **NoSQL Injection Prevention**: Removes MongoDB operators (`$`), converts objects to strings
 - **XSS Protection**: HTML entity escaping on user inputs
 
-### Password Security
+### Authentication & Password Security
 
+- **JWT Tokens**: Stateless authentication using JSON Web Tokens
+- **Token Storage**: Secure HTTP-only cookies for token storage
+- **Token Expiration**: Configurable expiration time for security
 - **Hashing**: bcrypt with 12 salt rounds
 - **Storage**: Passwords never stored in plain text
 - **Database**: Password field excluded from queries by default (`select: false`)
 - **API Responses**: Passwords never returned in API responses
 - **Requirements**: Minimum 8 characters, must include uppercase, lowercase, and digit
+- **Protected Routes**: Middleware-based route protection using JWT verification
 
 ### Validation Rules
 
@@ -399,6 +429,28 @@ loginValidation; // Validates login credentials
 
 // Parameter validation
 shortIdValidation; // Validates short ID format
+```
+
+### Authentication Middleware
+
+Protected routes use JWT authentication:
+
+```javascript
+// Verifies JWT token from cookies
+// Attaches user data to request object
+// Protects routes like /profile and /manage-urls
+verifyJWT; // JWT authentication middleware
+```
+
+### File Upload Middleware
+
+Profile avatar uploads handled by Multer:
+
+```javascript
+// Multer configuration for file uploads
+// Temporary local storage before Cloudinary upload
+// File type and size validation
+upload.single('avatar'); // Multer middleware for single file upload
 ```
 
 ### Content Negotiation
@@ -473,12 +525,16 @@ curl http://localhost:3000/api/v1/url
 ## 📝 Project Notes
 
 - Uses ES6 modules (`"type": "module"` in package.json)
+- JWT-based authentication with HTTP-only cookies
 - Passwords hashed with bcrypt (12 salt rounds)
 - Short IDs generated with nanoid (8 characters)
+- File uploads handled by Multer with Cloudinary storage
 - Centralized error handling
 - Content negotiation for API/Web responses
 - Click analytics tracked atomically
 - Environment variables validated at startup
+- Protected routes using JWT verification middleware
+- Avatar images stored on Cloudinary CDN
 
 ## 🤝 Contributing
 
