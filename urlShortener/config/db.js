@@ -5,6 +5,7 @@ const MONGO_URI = process.env.MONGO_URI;
 
 const MAX_RETRIES = 5;
 const RETRY_DELAY_MS = 1000;
+
 const CONNECTION_OPTIONS = {
     serverSelectionTimeoutMS: 5000,
     connectTimeoutMS: 5000
@@ -14,6 +15,7 @@ mongoose.set('bufferCommands', false);
 
 let reconnecting = false;
 let retryCount = 0;
+let hasConnectedOnce = false;
 
 if (!MONGO_URI) {
     console.error('✗ MONGO_URI not defined');
@@ -24,23 +26,28 @@ const sleep = ms => new Promise(res => setTimeout(res, ms));
 
 const connect = async () => {
     await mongoose.connect(MONGO_URI, CONNECTION_OPTIONS);
-    retryCount = 0; // reset after successful connection
+    retryCount = 0;
 };
 
 const connectWithRetry = async (context = 'startup') => {
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
         try {
             await connect();
-            console.log(`✓ MongoDB connected (${context})`);
-            console.log(`  Host: ${mongoose.connection.host}`);
-            console.log(`  DB: ${mongoose.connection.name}`);
-            return;
+
+            if (mongoose.connection.readyState === 1) {
+                console.log(`✓ MongoDB connected (${context})`);
+                console.log(`  Host: ${mongoose.connection.host}`);
+                console.log(`  DB: ${mongoose.connection.name}`);
+
+                hasConnectedOnce = true;
+                return;
+            }
         } catch (err) {
             console.error(`✗ MongoDB ${context} connection failed (${attempt}/${MAX_RETRIES})`);
 
             if (attempt === MAX_RETRIES) {
                 console.error(`✗ MongoDB ${context} retries exhausted. Exiting.`);
-                process.exit(1);
+                throw err;
             }
 
             await sleep(RETRY_DELAY_MS);
@@ -53,8 +60,9 @@ const connectDB = async () => {
     await connectWithRetry('startup');
 };
 
-/* ---- Controlled reconnect on disconnect ---- */
+/* ---- Controlled reconnect (ONLY after initial success) ---- */
 mongoose.connection.on('disconnected', async () => {
+    if (!hasConnectedOnce) return;
     if (reconnecting) return;
 
     reconnecting = true;

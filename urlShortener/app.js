@@ -1,5 +1,4 @@
 import express from 'express';
-import connectDB from './config/db.js';
 import path from 'path';
 import cookieParser from 'cookie-parser';
 import serveFavicon from 'serve-favicon';
@@ -14,13 +13,11 @@ import staticRoutes from './routes/static.routes.js';
 import errorHandler from './middlewares/errorHandler.js';
 
 const app = express();
-connectDB();
 
 // Dummy Favicon setup to handle favicon errors
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use(serveFavicon(path.join(__dirname, 'public', 'favicon.ico')));
-
 
 app.set('view engine', 'ejs');
 app.set('views', path.resolve('./views'));
