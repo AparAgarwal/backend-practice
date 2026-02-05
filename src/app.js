@@ -1,43 +1,44 @@
 import express from 'express';
+import User from './models/user.model.js';
 
 const app = express();
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }))
 
-app.get('/', (req, res)=>{
-    res.send('Hello, World!');
-})
-
-const notes = [];
-
-app.post('/post', (req, res)=>{
-    notes.push(req.body);
-    return res.status(201).json({
-        message: `POST request received!`,
-        data: req.body
-    });
+// Routes
+app.get('/', (req, res) => {
+    res.send('Welcome to the Node.js Database Intro!');
 });
 
-app.get('/post', (req, res)=>{
-    return res.status(200).json({
-        message: 'GET request received!',
-        data: notes
-    });
+app.post('/users', async (req, res) => {
+    try {
+        const newUser = new User(req.body);
+        await newUser.save();
+        res.status(201).json(newUser);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
 });
 
-app.delete('/post/:idx', (req, res)=>{
-    const idx = parseInt(req.params.idx, 10);
-    if (idx >= 0 && idx < notes.length) {
-        notes.splice(idx, 1);
-        return res.status(200).json({
-            message: `Note at index ${idx} deleted.`,
-            data: notes
-        });
-    } else {
-        return res.status(404).json({
-            message: `Note at index ${idx} not found.`
-        });
+app.get('/users', async (req, res) => {
+    try {
+        const users = await User.find();
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+app.delete('/users/:id', async (req, res) => {
+    try {
+        const user = await User.findByIdAndDelete(req.params.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.json({ message: 'User deleted' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 });
 
