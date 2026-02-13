@@ -18,29 +18,29 @@ export const getUserById = asyncHandler(async (req, res) => {
 
 export const registerUser = asyncHandler(async (req, res) => {
     const { name, username, email, password, confirmPassword } = req.body;
-    
+
     // Validation
     if (!name || !username || !email || !password || !confirmPassword) {
         throw new ApiError(400, 'All fields are required');
     }
-    
+
     if (password !== confirmPassword) {
         throw new ApiError(400, 'Passwords do not match');
     }
-    
+
     if (password.length < 8) {
         throw new ApiError(400, 'Password must be at least 8 characters long');
     }
-    
+
     // Check if user already exists
     const existingUser = await User.findOne({
         $or: [{ email }, { username }]
     });
-    
+
     if (existingUser) {
         throw new ApiError(409, 'User with this email or username already exists');
     }
-    
+
     // Create new user (password will be hashed automatically by pre-save hook)
     const user = await User.create({
         name,
@@ -48,11 +48,11 @@ export const registerUser = asyncHandler(async (req, res) => {
         email,
         password
     });
-    
+
     // Remove sensitive fields before responding
     const userResponse = user.toObject();
     delete userResponse.password;
-    
+
     return res.status(201).json(
         new ApiResponse(201, userResponse, 'User registered successfully')
     );
@@ -100,16 +100,16 @@ export const deleteUser = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, null, "User deleted successfully"));
 });
 
-export const loginUser = asyncHandler(async (req, res)=>{
-    const {email, password} = req.body;
-    if(!email || !password) throw new ApiError(400, "Email and password are required");
-    
-    const user = await User.findOne({email});
-    if(!user){
+export const loginUser = asyncHandler(async (req, res) => {
+    const { email, password } = req.body;
+    if (!email || !password) throw new ApiError(400, "Email and password are required");
+
+    const user = await User.findOne({ email });
+    if (!user) {
         throw new ApiError(401, "Invalid Credentials");
     }
     const validPass = await user.comparePassword(password);
-    if(!validPass){
+    if (!validPass) {
         throw new ApiError(401, "Invalid Credentials");
     }
 
@@ -118,5 +118,14 @@ export const loginUser = asyncHandler(async (req, res)=>{
 
     const userResponse = user.toObject();
     delete userResponse.password;
-    return res.status(200).json(new ApiResponse(200, {user: userResponse, token}, "Logged In Successfully"));
+    return res.status(200).json(new ApiResponse(200, { user: userResponse, token }, "Logged In Successfully"));
+});
+
+export const getCurrentUser = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user.userId).select('-password');
+
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+    return res.status(200).json(new ApiResponse(200, user, "Current user fetched successfully."))
 });
