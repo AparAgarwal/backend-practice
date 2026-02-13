@@ -1,6 +1,7 @@
 // models/user.model.js
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 const userSchema = new mongoose.Schema({
     name: {
@@ -45,6 +46,22 @@ userSchema.pre('findOneAndUpdate', async function(next) {
         update.$set.password = await bcrypt.hash(update.$set.password, salt);
     }
 });
+
+userSchema.methods.comparePassword = async function(pass){
+    return await bcrypt.compare(pass, this.password);
+};
+
+userSchema.methods.generateAuthToken = function(){
+    return jwt.sign(
+        {
+            userId: this._id,
+            email: this.email,
+            username: this.username
+        },
+        process.env.JWT_SECRET,
+        {expiresIn: process.env.JWT_EXPIRY || '15m'}
+    );
+}
 
 const User = mongoose.model('User', userSchema);
 export default User;

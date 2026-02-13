@@ -16,7 +16,7 @@ export const getUserById = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, user, "User fetched successfully"));
 });
 
-export const createUser = asyncHandler(async (req, res) => {
+export const registerUser = asyncHandler(async (req, res) => {
     const { name, username, email, password, confirmPassword } = req.body;
     
     // Validation
@@ -98,4 +98,25 @@ export const deleteUser = asyncHandler(async (req, res) => {
         throw new ApiError(404, "User not found");
     }
     return res.status(200).json(new ApiResponse(200, null, "User deleted successfully"));
+});
+
+export const loginUser = asyncHandler(async (req, res)=>{
+    const {email, password} = req.body;
+    if(!email || !password) throw new ApiError(400, "Email and password are required");
+    
+    const user = await User.findOne({email});
+    if(!user){
+        throw new ApiError(401, "Invalid Credentials");
+    }
+    const validPass = await user.comparePassword(password);
+    if(!validPass){
+        throw new ApiError(401, "Invalid Credentials");
+    }
+
+    // Generating JWT token
+    const token = user.generateAuthToken();
+
+    const userResponse = user.toObject();
+    delete userResponse.password;
+    return res.status(200).json(new ApiResponse(200, {user: userResponse, token}, "Logged In Successfully"));
 });
