@@ -8,28 +8,34 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    username: { 
+    username: {
         type: String,
         required: true,
         unique: true,
         lowercase: true,
         trim: true
     },
-    email: { 
+    email: {
         type: String,
         required: true,
         unique: true,
         lowercase: true,
         trim: true
     },
-    password:{
+    password: {
         type: String,
         required: true,
         minLength: 8
-    }
-}, {timestamps: true});
+    },
+    refreshTokens: [
+        {
+            token: { type: String, required: true },
+            createdAt: { type: Date, default: Date.now }
+        }
+    ]
+}, { timestamps: true });
 
-userSchema.pre('save', async function() {
+userSchema.pre('save', async function () {
     if (!this.isModified('password')) {
         return;
     }
@@ -37,9 +43,9 @@ userSchema.pre('save', async function() {
     this.password = await bcrypt.hash(this.password, salt);
 });
 
-userSchema.pre('findOneAndUpdate', async function(next) {
+userSchema.pre('findOneAndUpdate', async function () {
     const update = this.getUpdate();
-    
+
     // Check if password is being modified
     if (update.$set && update.$set.password) {
         const salt = await bcrypt.genSalt(10);
@@ -47,11 +53,11 @@ userSchema.pre('findOneAndUpdate', async function(next) {
     }
 });
 
-userSchema.methods.comparePassword = async function(pass){
+userSchema.methods.comparePassword = async function (pass) {
     return await bcrypt.compare(pass, this.password);
 };
 
-userSchema.methods.generateAuthToken = function(){
+userSchema.methods.generateAuthToken = function () {
     return jwt.sign(
         {
             userId: this._id,
@@ -59,9 +65,17 @@ userSchema.methods.generateAuthToken = function(){
             username: this.username
         },
         process.env.JWT_SECRET,
-        {expiresIn: process.env.JWT_EXPIRY || '15m'}
+        { expiresIn: process.env.JWT_EXPIRY || '15m' }
     );
-}
+};
+
+userSchema.methods.generateRefreshToken = function () {
+    return jwt.sign(
+        { userId: this._id },
+        process.env.REFRESH_SECRET,
+        { expiresIn: process.env.REFRESH_EXPIRY || '7d' }
+    );
+};
 
 const User = mongoose.model('User', userSchema);
 export default User;
