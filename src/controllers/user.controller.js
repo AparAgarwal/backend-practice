@@ -204,7 +204,7 @@ export const logoutUser = asyncHandler(async (req, res) => {
 });
 
 export const getCurrentUser = asyncHandler(async (req, res) => {
-    const user = await User.findById(req.user.userId).select('-password');
+    const user = await User.findById(req.user.userId).select('-password -refreshTokens');
 
     if (!user) {
         throw new ApiError(404, "User not found");
