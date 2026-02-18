@@ -1,3 +1,7 @@
 gitignore/
 node_modules/
 .env
+
+# for keeping the folder placeholder but not the files
+tmp/uploads/*
+!tmp/uploads/.gitkeep
