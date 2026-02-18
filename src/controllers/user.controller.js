@@ -211,3 +211,16 @@ export const getCurrentUser = asyncHandler(async (req, res) => {
     }
     return res.status(200).json(new ApiResponse(200, user, "Current user fetched successfully."))
 });
+
+// avatar upload 
+export const uploadAvatar = asyncHandler(async (req, res) => {
+    if (!req.file) {
+        throw new ApiError(400, 'No image uploaded');
+    }
+
+    const fileUrl = `/uploads/${req.file.filename}`;
+
+    return res.status(200).json(
+        new ApiResponse(200, { url: fileUrl }, 'Avatar uploaded successfully')
+    );
+});
