@@ -1,7 +1,17 @@
 import { ApiError } from "../utils/ApiError.js";
+import multer from 'multer';
 
 const errorHandler = (err, req, res, next) => {
     let error = err;
+
+    if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({
+                statusCode: 400,
+                message: 'File too large. Max 2MB allowed.'
+            });
+        }
+    }
 
     // If the error isn't already an ApiError, wrap it so it's consistent
     if (!(error instanceof ApiError)) {
