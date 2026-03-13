@@ -28,20 +28,7 @@ export const getUserById = asyncHandler(async (req, res) => {
 });
 
 export const registerUser = asyncHandler(async (req, res) => {
-    const { name, username, email, password, confirmPassword } = req.body;
-
-    // Validation
-    if (!name || !username || !email || !password || !confirmPassword) {
-        throw new ApiError(400, 'All fields are required');
-    }
-
-    if (password !== confirmPassword) {
-        throw new ApiError(400, 'Passwords do not match');
-    }
-
-    if (password.length < 8) {
-        throw new ApiError(400, 'Password must be at least 8 characters long');
-    }
+    const { name, username, email, password } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({
@@ -71,22 +58,8 @@ export const registerUser = asyncHandler(async (req, res) => {
 });
 
 export const updateUser = asyncHandler(async (req, res) => {
-    if (!req.body || Object.keys(req.body).length === 0) {
-        throw new ApiError(400, "No update data provided");
-    }
-
-    const allowedUpdates = ["name", "email", "password"];
-    const updates = {};
-
-    for (const key of allowedUpdates) {
-        if (req.body[key] !== undefined) {
-            updates[key] = req.body[key];
-        }
-    }
-
-    if (Object.keys(updates).length === 0) {
-        throw new ApiError(400, "No valid fields to update");
-    }
+    const { name, email, password } = req.body;
+    const updates = { ...(name && { name }), ...(email && { email }), ...(password && { password }) };
 
     const user = await User.findByIdAndUpdate(
         req.params.id,
@@ -115,7 +88,6 @@ export const deleteUser = asyncHandler(async (req, res) => {
 
 export const loginUser = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
-    if (!email || !password) throw new ApiError(400, "Email and password are required");
 
     const user = await User.findOne({ email });
     if (!user || !(await user.comparePassword(password))) {
