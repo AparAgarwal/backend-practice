@@ -3,7 +3,7 @@ import { ApiError } from '../utils/ApiError.js';
 
 const validate = (schema) => (req, res, next) => {
     try {
-        schema.parse({ 
+        schema.parse({
             body: req.body,
             params: req.params,
             query: req.query
@@ -11,11 +11,20 @@ const validate = (schema) => (req, res, next) => {
         next();
     } catch (err) {
         if (err instanceof ZodError) {
-            const errors = err.errors.map((e) => ({
-                field: e.path.filter((p) => p !== 'body').join('.'),
+            const zodIssues = Array.isArray(err.issues)
+                ? err.issues
+                : Array.isArray(err.errors)
+                    ? err.errors
+                    : [];
+
+            const errors = zodIssues.map((e) => ({
+                field: Array.isArray(e.path)
+                    ? e.path.filter((p) => p !== 'body').join('.')
+                    : '',
                 message: e.message,
             }));
-            return next(new ApiError(400, errors[0].message, errors));
+
+            return next(new ApiError(400, errors[0]?.message || 'Validation error', errors));
         }
         next(err);
     }
