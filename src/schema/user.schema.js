@@ -18,9 +18,12 @@ export const userRegistrationSchema = z.object({
           .toLowerCase()
           .trim(),
 
-        email: z.string({
-            required_error: "Email is required",
-        }).email("Not a valid email address"),
+        email: z.email({
+            error: (issue) =>
+                issue.input === undefined
+                    ? "Email is required"
+                    : "Not a valid email address",
+        }),
 
         password: passwordSchema,
 
@@ -35,9 +38,12 @@ export const userRegistrationSchema = z.object({
 
 export const userLoginSchema = z.object({
     body: z.object({
-        email: z.string({
-            required_error: "Email is required",
-        }).email("Not a valid email address"),
+        email: z.email({
+            error: (issue) =>
+                issue.input === undefined
+                    ? "Email is required"
+                    : "Not a valid email address",
+        }),
 
         password: z.string({
             required_error: "Password is required",
@@ -48,7 +54,7 @@ export const userLoginSchema = z.object({
 export const userUpdateSchema = z.object({
     body: z.object({
         name: z.string().min(2, "Name must be at least 2 characters").optional(),
-        email: z.email("Not a valid email address").optional(),
+        email: z.email({ error: "Not a valid email address" }).optional(),
         password: passwordSchema.optional(),
     }).refine((data) => Object.keys(data).length > 0, {
         message: "No valid fields to update",
